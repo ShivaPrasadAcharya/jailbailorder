@@ -845,6 +845,9 @@
 
 <div id="toast"></div>
 
+<!-- External library for .docx text extraction (optional) -->
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.18/mammoth.browser.min.js"></script>
+
 <script>
 // ═══════════════════════════════════════════════
 // STATE
@@ -1092,11 +1095,26 @@ async function loadTxtFile(src, index, total) {
   updateFileRow(fileId,filename,'processing','AI विश्लेषण…');
   updateAIStatus(`"${filename}" प्रशोधन…`,`${index}/${total}`);
 
+  const ext = filename.split('.').pop().toLowerCase();
   let rawText;
   try {
     const res=await fetch(src);
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    rawText=await res.text();
+
+    if(ext==='docx'){
+      const buf = await res.arrayBuffer();
+      if(window.mammoth && typeof mammoth.extractRawText==='function'){
+        try { rawText = (await mammoth.extractRawText({arrayBuffer: buf})).value; }
+        catch { rawText = new TextDecoder('utf-8').decode(buf); }
+      } else {
+        rawText = new TextDecoder('utf-8').decode(buf);
+      }
+    } else if(ext==='doc'){
+      const buf = await res.arrayBuffer();
+      rawText = new TextDecoder('utf-8').decode(buf);
+    } else {
+      rawText=await res.text();
+    }
   } catch(e){ updateFileRow(fileId,filename,'error','फेला परेन'); return; }
 
   let parsed,usedAI=false;
@@ -1124,7 +1142,7 @@ async function loadTxtFile(src, index, total) {
   // DEFAULT: new file's category is COLLAPSED
   catCollapsed[fileId] = true;
 
-  allFiles.push({id:fileId,label:parsed.label||filename.replace(/\.txt$/i,''),filename,source:'txt-import',usedAI,cases});
+  allFiles.push({id:fileId,label:parsed.label||filename.replace(/\.(txt|doc|docx)$/i,''),filename,source:'txt-import',usedAI,cases});
   updateFileRow(fileId,filename,'done',`${cases.length} मुद्दा${usedAI?' (AI)':''}`,fileId);
   updateFilesToggleCount();
   rebuildCaseList();
@@ -1137,7 +1155,7 @@ async function loadAllFiles() {
   const tags=[...document.querySelectorAll('script[src]')]
     .filter(s=>{
       const src=s.getAttribute('src').toLowerCase();
-      return src.endsWith('.txt')||src.endsWith('.json');
+      return src.endsWith('.txt')||src.endsWith('.doc')||src.endsWith('.docx')||src.endsWith('.json');
     });
   if(!tags.length){
     document.getElementById('caseList').innerHTML=
@@ -2071,15 +2089,17 @@ window.addEventListener('DOMContentLoaded',()=>setTimeout(loadAllFiles,100));
 </script>
 
 <!-- ════════════════════════════════════════════
-     ADD YOUR FILES BELOW (.txt OR .json)
-     Place files in the same folder as index.html
+     ADD YOUR FILES BELOW (.txt, .doc, .docx OR .json)
+     Place files in the same folder as index.html (or use a remote URL)
 
-     .txt  → parsed by AI (Claude Haiku) or structural regex
-     .json → loaded directly (same structure as ⬇ JSON export)
-             { "label": "...", "cases": [ { caseNo, plaintiff,
-               defendant, type, court, judge, date, order } ] }
+     .txt   → parsed by AI (Claude Haiku) or structural regex
+     .doc/.docx → extracted as plain text (best with .docx; .doc is best-effort)
+     .json  → loaded directly (same structure as ⬇ JSON export)
+              { "label": "...", "cases": [ { caseNo, plaintiff,
+                defendant, type, court, judge, date, order } ] }
 ════════════════════════════════════════════ -->
 <script src="अन्य आदेश.txt"></script>
+<!-- Example external link: <script src="https://example.com/अन्य आदेश.docx"></script> -->
 
 </body>
 </html>
