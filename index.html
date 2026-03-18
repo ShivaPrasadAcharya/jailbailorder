@@ -1142,7 +1142,7 @@ async function loadTxtFile(src, index, total) {
   // DEFAULT: new file's category is COLLAPSED
   catCollapsed[fileId] = true;
 
-  allFiles.push({id:fileId,label:parsed.label||filename.replace(/\.(txt|doc|docx)$/i,''),filename,source:'txt-import',usedAI,cases});
+  allFiles.push({id:fileId,label:parsed.label||filename.replace(/\.(txt|doc|docx)$/i,''),filename,src,source:'txt-import',usedAI,cases});
   updateFileRow(fileId,filename,'done',`${cases.length} मुद्दा${usedAI?' (AI)':''}`,fileId);
   updateFilesToggleCount();
   rebuildCaseList();
@@ -1229,7 +1229,7 @@ async function loadJsonFile(src, index, total) {
   catCollapsed[fileId]=true;
   const label=parsed.label||parsed.filename||filename.replace(/\.json$/i,'');
   // JSON files are pre-parsed — mark source as 'json-import', usedAI=false
-  allFiles.push({id:fileId,label,filename,source:'json-import',usedAI:false,cases});
+  allFiles.push({id:fileId,label,filename,src,source:'json-import',usedAI:false,cases});
   // Show a {} tag for JSON files instead of ⬇ JSON (they already are JSON)
   updateFileRow(fileId,filename,'done',`${cases.length} मुद्दा (JSON)`,fileId,'json');
   updateFilesToggleCount();
@@ -1533,6 +1533,8 @@ function renderSelectedOrders(){
       card.className='order-card';
       card.dataset.id = c.id;
       card.dataset.type = (c.type||'').toLowerCase();
+      card.dataset.src = file.src || '';
+      card.dataset.filename = file.filename || '';
       card.innerHTML=`
         <div class="card-header">
           <div class="card-meta">
@@ -1547,7 +1549,7 @@ function renderSelectedOrders(){
         </div>
         <div class="card-body">
           <h4>${bodyHeading}
-            <button class="copy-order-btn" onclick="copyOrder(this)" title="सम्पूर्ण आदेश प्रतिलिपि गर्नुहोस्"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="10" rx="1.5"/><path d="M3 11V3a1 1 0 0 1 1-1h7"/></svg></button><button class="copy-order-btn copy-body-btn" onclick="copyOrderBody(this)" title="यसमा…गर्नू प्रतिलिपि गर्नुहोस्"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h8M4 9h6M4 12h4"/><rect x="1" y="2" width="14" height="12" rx="1.5"/></svg></button></h4>
+            <button class="copy-order-btn" onclick="copyOrder(this)" title="सम्पूर्ण आदेश प्रतिलिपि गर्नुहोस्"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="10" rx="1.5"/><path d="M3 11V3a1 1 0 0 1 1-1h7"/></svg></button><button class="copy-order-btn copy-body-btn" onclick="copyOrderBody(this)" title="यसमा…गर्नू प्रतिलिपि गर्नुहोस्"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h8M4 9h6M4 12h4"/><rect x="1" y="2" width="14" height="12" rx="1.5"/></svg></button><button class="copy-order-btn download-file-btn" onclick="downloadSourceFile(this)" title="फाइल डाउनलोड गर्नुहोस्"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1v10"/><path d="M5 8l3 3 3-3"/><path d="M3 13h10"/></svg></button></h4>
           <pre class="order-text">${c.order||'(आदेश उपलब्ध छैन)'}</pre>
         </div>
         <div class="card-footer">
@@ -1655,6 +1657,23 @@ function copyOrderBody(btn){
   const body = lines.slice(startIdx, endIdx + 1).join('\n').trim();
   if(!body){ showToast('यसमा…गर्नू भाग फेला परेन','info'); return; }
   _doCopy(btn, body, '✓ आदेश अंश प्रतिलिपि भयो');
+}
+
+function downloadSourceFile(btn){
+  const card = btn.closest('.order-card');
+  if(!card) return;
+  const src = card.dataset.src;
+  const filename = card.dataset.filename || (src||'').split('/').pop();
+  if(!src){ showToast('डाउनलोड स्रोत फेला परेन','error'); return; }
+
+  const a = document.createElement('a');
+  a.href = src;
+  if(filename) a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast('✓ फाइल डाउनलोड सुरु भयो','success');
 }
 
 function _doCopy(btn, text, toastMsg){
@@ -2098,7 +2117,13 @@ window.addEventListener('DOMContentLoaded',()=>setTimeout(loadAllFiles,100));
               { "label": "...", "cases": [ { caseNo, plaintiff,
                 defendant, type, court, judge, date, order } ] }
 ════════════════════════════════════════════ -->
-<script src="अन्य आदेश.txt"></script>
+<!-- Local docs: auto-loaded from DOCS/ by script tags -->
+<script src="DOCS/080-c1-0253 हुम बहादुर गुरुङ थुनछेक आदेश.txt"></script>
+<script src="DOCS/आदेश शरिर बन्धक.docx"></script>
+<script src="DOCS/थुनछेक आत्हत्या दुरुत्साहन.docx"></script>
+<script src="DOCS/प्रतिवादी खिमराज भुजेल - रेश माया राई जाहेरीले .doc"></script>
+<script src="DOCS/बयान, शरिर बन्धक गगन भुजेल.docx"></script>
+<script src="DOCS/हर्क बहदुर तामाङ.doc"></script>
 <!-- Example external link: <script src="https://example.com/अन्य आदेश.docx"></script> -->
 
 </body>
