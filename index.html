@@ -1239,7 +1239,7 @@ async function loadJsonFile(src, index, total) {
   if(!cases.length){ updateFileRow(fileId,filename,'error','मुद्दा फेला परेन'); return; }
 
   catCollapsed[fileId]=true;
-  const label=parsed.label||parsed.filename||filename.replace(/\.json$/i,'');
+  const label=parsed.label||parsed.filename||filename;
   // JSON files are pre-parsed — mark source as 'json-import', usedAI=false
   allFiles.push({id:fileId,label,filename,src,source:'json-import',usedAI:false,cases});
   // Show a {} tag for JSON files instead of ⬇ JSON (they already are JSON)
@@ -2204,7 +2204,7 @@ window.addEventListener('DOMContentLoaded',()=>setTimeout(loadAllFiles,100));
 <script src="DOCS/अन्तरकालीन आदेश.docx"></script>
 <script src="DOCS/अन्तरिम संरक्षणात्मक आदेश कार्यान्वयन गरी पाउँमा आदेश.docx"></script>
 <script src="DOCS/अन्तरिम संरक्षणात्मक आदेश.docx"></script>
-<script src="DOCS/अन्य आदेश.docx"></script>
+<script src="DOCS/अन्य आदेश.json"></script>
 <script src="DOCS/अल्पकालिन अन्तरिम आदेश.docx"></script>
 <script src="DOCS/कारवाही के कुन अवस्थामा छ.docx"></script>
 <script src="DOCS/कैद हद गरी पाउँ.docx"></script>
