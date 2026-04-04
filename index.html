@@ -858,7 +858,7 @@
 
 <!-- External library for .docx text extraction (optional) -->
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.18/mammoth.browser.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-VCVQH5iQ3l7c7VnX3G+mZ3UBx1+O8M/DT5bM9oW9eH3wNWW7HIlGP8/cXU0So2l0nDmRhjSJRJX0CrjfiL0wfw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <script>
 // ═══════════════════════════════════════════════
@@ -1302,9 +1302,36 @@ function downloadJson(fileId){
   showToast('✓ JSON डाउनलोड भयो','success');
 }
 
-function downloadAllJsonZip(){
+function ensureJsZipLoaded(){
+  if(typeof JSZip !== 'undefined') return Promise.resolve(JSZip);
+  if(window._loadingJsZipPromise) return window._loadingJsZipPromise;
+
+  window._loadingJsZipPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+    script.onload = () => {
+      if (typeof JSZip === 'undefined') {
+        reject(new Error('JSZip लोड भएन'));
+      } else {
+        resolve(JSZip);
+      }
+    };
+    script.onerror = () => reject(new Error('JSZip लोड गर्दा असफल भयो'));
+    document.head.appendChild(script);
+  });
+
+  return window._loadingJsZipPromise;
+}
+
+async function downloadAllJsonZip(){
   if(!allFiles.length){ showToast('कोही फाइल लोड गरिएको छैन','error'); return; }
-  if(typeof JSZip==='undefined'){ showToast('ZIP पुस्तकालय उपलब्ध छैन','error'); return; }
+  try {
+    await ensureJsZipLoaded();
+  } catch (err) {
+    console.error(err);
+    showToast('ZIP पुस्तकालय लोड गर्न सकिएन','error');
+    return;
+  }
 
   const zip = new JSZip();
   allFiles.forEach(f => {
