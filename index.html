@@ -1220,7 +1220,7 @@ async function loadTxtFile(src, index, total) {
   // DEFAULT: new file's category is COLLAPSED
   catCollapsed[fileId] = true;
 
-  allFiles.push({id:fileId,label:parsed.label||filename.replace(/\.(txt|doc|docx)$/i,''),filename,src,source:'txt-import',usedAI,cases});
+  allFiles.push({id:fileId,label:filename,filename,src,source:'txt-import',usedAI,cases});
   updateFileRow(fileId,filename,'done',`${cases.length} मुद्दा${usedAI?' (AI)':''}`,fileId);
   updateFilesToggleCount();
   rebuildCaseList();
@@ -1305,8 +1305,8 @@ async function loadJsonFile(src, index, total) {
   if(!cases.length){ updateFileRow(fileId,filename,'error','मुद्दा फेला परेन'); return; }
 
   catCollapsed[fileId]=true;
-  const label=parsed.label||parsed.filename||filename;
-  // JSON files are pre-parsed — mark source as 'json-import', usedAI=false
+  const label = filename;
+  // JSON files are loaded by filename so the left panel shows the source JSON name
   allFiles.push({id:fileId,label,filename,src,source:'json-import',usedAI:false,cases});
   // Show a {} tag for JSON files instead of ⬇ JSON (they already are JSON)
   updateFileRow(fileId,filename,'done',`${cases.length} मुद्दा (JSON)`,fileId,'json');
@@ -1362,8 +1362,9 @@ function downloadJson(fileId){
     court:rest.court, judge:rest.judge, date:rest.date,
     order:rest.order, recognition:rest.recognition||''
   }));
-  const blob=new Blob([JSON.stringify({filename:f.filename,label:f.label,parsedAt:new Date().toISOString(),totalCases:f.cases.length,cases:exportCases},null,2)],{type:'application/json'});
-  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:f.filename.replace(/\.txt$/i,'')+'.json'});
+  const jsonFilename = f.filename.replace(/\.(txt|doc|docx|json)$/i,'') + '.json';
+  const blob=new Blob([JSON.stringify({filename:jsonFilename,label:jsonFilename,parsedAt:new Date().toISOString(),totalCases:f.cases.length,cases:exportCases},null,2)],{type:'application/json'});
+  const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:jsonFilename});
   a.click();URL.revokeObjectURL(a.href);
   showToast('✓ JSON डाउनलोड भयो','success');
 }
@@ -1408,9 +1409,9 @@ async function downloadAllJsonZip(){
       court:rest.court, judge:rest.judge, date:rest.date,
       order:rest.order, recognition:rest.recognition||''
     }));
-    const json = JSON.stringify({filename:f.filename,label:f.label,parsedAt:new Date().toISOString(),totalCases:f.cases.length,cases:exportCases},null,2);
-    const zipName = f.filename.replace(/\.(txt|doc|docx|json)$/i,'') + '.json';
-    zip.file(zipName, json);
+    const jsonFilename = f.filename.replace(/\.(txt|doc|docx|json)$/i,'') + '.json';
+    const json = JSON.stringify({filename:jsonFilename,label:jsonFilename,parsedAt:new Date().toISOString(),totalCases:f.cases.length,cases:exportCases},null,2);
+    zip.file(jsonFilename, json);
   });
 
   zip.generateAsync({type:'blob'}).then(blob=>{
