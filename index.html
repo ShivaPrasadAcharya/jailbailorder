@@ -238,6 +238,14 @@
   .btn-json { background: var(--green); color: #d4f0da; border: none; border-radius: 2px; padding: 2px 7px; font-size: 0.62rem; cursor: pointer; transition: background 0.18s; white-space: nowrap; display: none; }
   .file-row.done .btn-json { display: inline-block; }
   .btn-json:hover { background: var(--green-light); }
+  .btn-zip {
+    display: flex; align-items: center; gap: 0.25rem;
+    background: #1a3a6b; color: #f8f2d4; border: 1px solid rgba(26,58,107,0.6);
+    border-radius: 3px; padding: 0.32rem 0.72rem; font-size: 0.7rem;
+    font-family: 'Noto Sans Devanagari', sans-serif; cursor: pointer;
+    transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-zip:hover { background: #253f76; border-color: #5b8cd6; }
 
   /* ══════════ CASE LIST SECTION ══════════ */
   .list-section {
@@ -773,6 +781,9 @@
           <span class="ftb-count" id="ftbCount" style="display:none">0</span>
           <span class="ftb-arrow" id="ftbArrow">▼</span>
         </button>
+        <button class="btn-zip" onclick="downloadAllJsonZip()" title="सबै JSON फाइलहरू ZIP रूपमा डाउनलोड गर्नुहोस्">
+          ⬇ ZIP
+        </button>
         <button class="btn-reset" onclick="resetPanel()" title="पूर्वावस्थामा फर्कनुहोस्">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M13.5 8A5.5 5.5 0 1 1 8 2.5"/>
@@ -847,6 +858,7 @@
 
 <!-- External library for .docx text extraction (optional) -->
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.4.18/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-VCVQH5iQ3l7c7VnX3G+mZ3UBx1+O8M/DT5bM9oW9eH3wNWW7HIlGP8/cXU0So2l0nDmRhjSJRJX0CrjfiL0wfw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script>
 // ═══════════════════════════════════════════════
@@ -1289,6 +1301,40 @@ function downloadJson(fileId){
   a.click();URL.revokeObjectURL(a.href);
   showToast('✓ JSON डाउनलोड भयो','success');
 }
+
+function downloadAllJsonZip(){
+  if(!allFiles.length){ showToast('कोही फाइल लोड गरिएको छैन','error'); return; }
+  if(typeof JSZip==='undefined'){ showToast('ZIP पुस्तकालय उपलब्ध छैन','error'); return; }
+
+  const zip = new JSZip();
+  allFiles.forEach(f => {
+    const exportCases = f.cases.map(({id,party1,party1Role,party2,party2Role,...rest})=>({
+      caseNo:rest.caseNo, petitionNo:rest.petitionNo,
+      party1, party1Role, party2, party2Role,
+      type:rest.type, subject:rest.subject,
+      court:rest.court, judge:rest.judge, date:rest.date,
+      order:rest.order, recognition:rest.recognition||''
+    }));
+    const json = JSON.stringify({filename:f.filename,label:f.label,parsedAt:new Date().toISOString(),totalCases:f.cases.length,cases:exportCases},null,2);
+    const zipName = f.filename.replace(/\.(txt|doc|docx|json)$/i,'') + '.json';
+    zip.file(zipName, json);
+  });
+
+  zip.generateAsync({type:'blob'}).then(blob=>{
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'all-json-files.zip';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    showToast('✓ सबै JSON ZIP डाउनलोड भयो','success');
+  }).catch(err=>{
+    console.error(err);
+    showToast('ZIP सिर्जना गर्दा त्रुटि भयो','error');
+  });
+}
+
 
 // ═══════════════════════════════════════════════
 // BUILD CASE LIST
@@ -2169,6 +2215,7 @@ window.addEventListener('DOMContentLoaded',()=>setTimeout(loadAllFiles,100));
 <script src="DOCS/हर्क बहादुर तामाङ.doc"></script>
 <script src="DOCS/हेदिहर्दै आदेश.docx"></script>
 <script src="DOCS/हेर्न नभ्याउने.docx"></script>
+
 
 <!-- Example external link: <script src="https://example.com/अन्य आदेश.docx"></script> -->
 
