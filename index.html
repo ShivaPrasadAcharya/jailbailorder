@@ -712,7 +712,7 @@
     <div class="srch-opts-wrap" id="leftOptsWrap">
       <button class="srch-opts-btn" onclick="toggleSearchOpts('leftOptsWrap')" title="खोज विकल्पहरू">⋮</button>
       <div class="srch-opts-dropdown" id="leftOptsDropdown">
-        <label class="srch-opt-row"><input type="checkbox" id="leftNormChk" onchange="onLeftSearch()"><span>स — सामान्यीकरण</span></label>
+        <label class="srch-opt-row"><input type="checkbox" id="leftNormChk" checked="checked" onchange="onLeftSearch()"><span>स — सामान्यीकरण</span></label>
         <label class="srch-opt-row"><input type="checkbox" id="leftFolderChk" onchange="onLeftSearch()"><span>फो — फोल्डरमा मात्र</span></label>
         <div class="srch-opt-divider"></div>
         <div class="srch-opt-btns">
@@ -736,7 +736,7 @@
     <div class="srch-opts-wrap" id="rightOptsWrap">
       <button class="srch-opts-btn" onclick="toggleSearchOpts('rightOptsWrap')" title="खोज विकल्पहरू">⋮</button>
       <div class="srch-opts-dropdown" id="rightOptsDropdown">
-        <label class="srch-opt-row"><input type="checkbox" id="rightNormChk" onchange="onRightSearch()"><span>स — सामान्यीकरण</span></label>
+        <label class="srch-opt-row"><input type="checkbox" id="rightNormChk" checked="checked" onchange="onRightSearch()"><span>स — सामान्यीकरण</span></label>
         <label class="srch-opt-row"><input type="checkbox" id="rightFilterChk" onchange="onRightSearch()"><span>फि — मिलेको मात्र</span></label>
         <label class="srch-opt-row"><input type="checkbox" id="rightFilter2Chk" onchange="onRightSearch()"><span>फि२ — किसिम अनुसार</span></label>
         <div class="srch-opt-divider"></div>
@@ -964,7 +964,7 @@ function parseWithRegex(rawText, filename) {
     const lines = block.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
 
     // ── CASE NUMBER: मुद्दा नं ──
-    const caseNoRe  = /(?:मुद्दा\s*नं[.:\s]*|मु\.\s*नं[.:\s]*)([A-Za-z0-9\u0900-\u097F][A-Za-z0-9\u0900-\u097F]*[-\/][A-Za-z0-9\u0900-\u097F]+(?:[-\/][A-Za-z0-9\u0900-\u097F]+)*)/i;
+    const caseNoRe  = /(?:मुद्दा\s*(?:नं|नम्वर|नम्बर|न)[.:;\s-]*|मु\.\s*(?:नं|नम्वर|नम्बर|न)[.:;\s-]*)\s*([A-Za-z0-9\u0900-\u097F][A-Za-z0-9\u0900-\u097F]*[-\/][A-Za-z0-9\u0900-\u097F]+(?:[-\/][A-Za-z0-9\u0900-\u097F]+)*)/i;
     const idPattern = /^([A-Za-z\u0900-\u097F]{1,6}[-\/][A-Za-z0-9\u0900-\u097F]{1,10}(?:[-\/][A-Za-z0-9\u0900-\u097F]{1,10})*)$/;
     const inlineId  = /\b0?[\u0966-\u096F0-9]{2,3}[-\u2013][A-Z]{1,5}[-\u2013][\u0966-\u096F0-9]{3,6}\b/;
 
@@ -981,7 +981,7 @@ function parseWithRegex(rawText, filename) {
     }
 
     // ── PETITION NUMBER: नि.नं / निवेदन नं ──
-    const petNoRe = /(?:नि\.?\s*नं[.:\s]*|निवेदन\s*नं[.:\s]*)([A-Za-z0-9\u0900-\u097F][A-Za-z0-9\u0900-\u097F]*[-\/][A-Za-z0-9\u0900-\u097F]+(?:[-\/][A-Za-z0-9\u0900-\u097F]+)*)/i;
+    const petNoRe = /(?:नि\.?\s*(?:नं|नम्वर|नम्बर|न)[.:;ः\s-]*|निवेदन\s*(?:नं|नम्वर|नम्बर|न)[.:;ः\s-]*)\s*([A-Za-z0-9\u0900-\u097F][A-Za-z0-9\u0900-\u097F]*[-\/][A-Za-z0-9\u0900-\u097F]+(?:[-\/][A-Za-z0-9\u0900-\u097F]+)*)/i;
     let petitionNo = '';
     for(let i=0;i<lines.length;i++){
       const m=lines[i].match(petNoRe);
@@ -1713,6 +1713,7 @@ const NepaliNormalizer = {
   sibilantMap: { 'श': 'स', 'ष': 'स' },
   nasalMap:    { 'ङ': 'न', 'ण': 'न', 'ञ': 'न', 'ं': 'न्' },
   vaBaMap:     { 'व': 'ब' },
+  numberMap:   { '०':'0', '१':'1', '२':'2', '३':'3', '४':'4', '५':'5', '६':'6', '७':'7', '८':'8', '९':'9' },
   normalize(text) {
     if (!text) return '';
     let n = text.normalize('NFC').replace(/\u200D/g,'').replace(/\u200C/g,'');
@@ -1720,6 +1721,7 @@ const NepaliNormalizer = {
     for (const [f,t] of Object.entries(this.sibilantMap)) n = n.split(f).join(t);
     for (const [f,t] of Object.entries(this.nasalMap))    n = n.split(f).join(t);
     for (const [f,t] of Object.entries(this.vaBaMap))     n = n.split(f).join(t);
+    for (const [f,t] of Object.entries(this.numberMap))   n = n.split(f).join(t);
     return n;
   },
   isDevanagari(text) { return /[\u0900-\u097F]/.test(text); },
@@ -2118,12 +2120,41 @@ window.addEventListener('DOMContentLoaded',()=>setTimeout(loadAllFiles,100));
                 defendant, type, court, judge, date, order } ] }
 ════════════════════════════════════════════ -->
 <!-- Local docs: auto-loaded from DOCS/ by script tags -->
-<script src="DOCS/080-c1-0253 हुम बहादुर गुरुङ थुनछेक आदेश.txt"></script>
-<script src="DOCS/आदेश शरिर बन्धक.docx"></script>
-<script src="DOCS/थुनछेक आत्हत्या दुरुत्साहन.docx"></script>
+<script src="DOCS/पत्रिकामा देवानी.docx"></script>
+<script src="DOCS/पत्रिकामा फौजदारी.docx"></script>
+<script src="DOCS/परिक्षण रिपोर्ट ब्रिफाउने.docx"></script>
+<script src="DOCS/पुनः म्याद जारी.docx"></script>
+<script src="DOCS/पुर्व आदेशानुसारको कार्य सम्पन्न गर्ने.docx"></script>
+<script src="DOCS/पेशी नतोकिएकोले स्थगिति.docx"></script>
+<script src="DOCS/पेशी स्थगिति.docx"></script>
 <script src="DOCS/प्रतिवादी खिमराज भुजेल - रेश माया राई जाहेरीले .doc"></script>
-<script src="DOCS/बयान, शरिर बन्धक गगन भुजेल.docx"></script>
-<script src="DOCS/हर्क बहदुर तामाङ.doc"></script>
+<script src="DOCS/बयान, शरिर बन्धक गमन भुजेल.docx"></script>
+<script src="DOCS/हर्क बहुदूर तामाङ्.doc"></script>
+<script src="DOCS/अन्य आदेश.docx"></script>
+<script src="DOCS/अल्पकालिन अन्तरिम आदेश.docx"></script>
+<script src="DOCS/आदेश शरिर बन्धक.docx"></script>
+<script src="DOCS/कारवाही के कुन अवस्थामा छ.docx"></script>
+<script src="DOCS/कैद हद गरी पाउँ.docx"></script>
+<script src="DOCS/चेक अनादर बैक बुझ्ने.docx"></script>
+<script src="DOCS/डा.शिकाउने.docx"></script>
+<script src="DOCS/तायदाती फाँटवारी.docx"></script>
+<script src="DOCS/तारख थाम्रे म्याद बाँकी.docx"></script>
+<script src="DOCS/थुनछेक आह्ल्या दुरुत्साहन.docx"></script>
+<script src="DOCS/दोस्रो पटक पत्रिकामा बैडकिङ्ग कसूर.docx"></script>
+<script src="DOCS/नियमानुसारको आदेश.docx"></script>
+<script src="DOCS/१ दिने म्याद.docx"></script>
+<script src="DOCS/080-c1-0253 हुम बहादुर गुरुड थुनछेक आदेश.txt"></script>
+<script src="DOCS/१२३ बमोजिम शिकाउने.docx"></script>
+<script src="DOCS/१५५ बमोजिमको सुविधा पाउँ.docx"></script>
+<script src="DOCS/FN अन्य आदेश.docx"></script>
+<script src="DOCS/PD प्रत्यर्थी शिकाउने आदेश.docx"></script>
+<script src="DOCS/अदालतको अवहेलना.docx"></script>
+<script src="DOCS/अदालती शुल्कको सुविधा पाउँ.docx"></script>
+<script src="DOCS/अन्तरकालीन आदेश.docx"></script>
+<script src="DOCS/अन्तरिम संरक्षणात्मक आदेश कार्यान्वयन गरी पाउँमा आदेश.docx"></script>
+<script src="DOCS/अन्तरिम संरक्षणात्मक आदेश.docx"></script>
+
+
 <!-- Example external link: <script src="https://example.com/अन्य आदेश.docx"></script> -->
 
 </body>
