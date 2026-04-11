@@ -1169,7 +1169,7 @@ function parseWithRegex(rawText, filename) {
 // ═══════════════════════════════════════════════
 async function loadTxtFile(src, index, total) {
   const filename=src.split('/').pop();
-  const fileId='file_'+filename.replace(/[^a-zA-Z0-9]/g,'_');
+  const fileId='file_'+index+'_'+filename.replace(/[^a-zA-Z0-9]/g,'_');
   updateFileRow(fileId,filename,'processing','AI विश्लेषण…');
   updateAIStatus(`"${filename}" प्रशोधन…`,`${index}/${total}`);
 
@@ -1266,7 +1266,7 @@ async function loadAllFiles() {
 // ═══════════════════════════════════════════════
 async function loadJsonFile(src, index, total) {
   const filename=src.split('/').pop();
-  const fileId='file_'+filename.replace(/[^a-zA-Z0-9]/g,'_');
+  const fileId='file_'+index+'_'+filename.replace(/[^a-zA-Z0-9]/g,'_');
   updateFileRow(fileId,filename,'processing','JSON लोड…');
   updateAIStatus(`"${filename}" लोड…`,`${index}/${total}`);
 
